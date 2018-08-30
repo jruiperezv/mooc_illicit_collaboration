@@ -1,0 +1,33 @@
+# Focus on students.
+access_groups: Lists types of privileges that an individual may have in the session site 
+
+# Get students users, forget the rest
+users: For each user: ID, locale, timezone, registration time, last access time, email preferences
+
+# Get quiz_type = 'quiz' and deleted = 0.
+quiz_metadata: Details of each quiz (deadlines, max submissions, ...)
+
+# The submission_time is in miliseconds
+quiz_submission_metadata: Lists all learner quiz submissions; includes submission time and raw score
+
+
+
+# QUERIES
+
+# Students of the course
+SELECT * FROM music.users where access_group_id = 4;
+
+
+
+# Submissions I am interested in
+SELECT * FROM music.quiz_metadata where quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1;
+
+
+
+# This should be the query that I want
+
+SELECT * FROM music.quiz_submission_metadata 
+		 WHERE item_id IN (SELECT id FROM music.quiz_metadata 
+						   WHERE quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1)
+		 AND session_user_id IN (SELECT session_user_id FROM music.users
+							     WHERE access_group_id = 4);
