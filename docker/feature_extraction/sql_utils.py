@@ -61,8 +61,7 @@ def add_course_and_session_columns(csvfile, course, session):
     return
 
 
-def extract_coursera_sql_data(course, session, forum_comment_filename="forum_comments.csv",
-                              forum_post_filename="forum_posts.csv"):
+def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
     """
     Initialize the mySQL database, load files, and execute queries to deposit csv files of data into /input/course/session directory.
     :param course: course name.
@@ -75,26 +74,18 @@ def extract_coursera_sql_data(course, session, forum_comment_filename="forum_com
     course_session_dir = os.path.join("/input", course, session)
     mysql_default_output_dir = "/var/lib/mysql/{}/".format(
         DATABASE_NAME)  # this is the only location mysql can write to
-    forum_comment_fp = os.path.join(course_session_dir, forum_comment_filename)
-    forum_post_fp = os.path.join(course_session_dir, forum_post_filename)
+    outfile_fp = os.path.join(course_session_dir, outfile)
     hash_mapping_sql_dump = \
-        [x for x in os.listdir(course_session_dir) if "hash_mapping" in x and session in x][0]
+        [x for x in os.listdir(course_session_dir) if "anonymized_general" in x and session in x][0] # contains users table
     forum_sql_dump = \
         [x for x in os.listdir(course_session_dir) if "anonymized_forum" in x and session in x][0]
     initialize_database()
     load_mysql_dump(os.path.join(course_session_dir, forum_sql_dump))
     load_mysql_dump(os.path.join(course_session_dir, hash_mapping_sql_dump))
     # execute forum comment query and send to csv
-    query = """SELECT comment_text FROM forum_comments WHERE is_spam != 1"""
-    execute_mysql_query_into_csv(query, file=forum_comment_filename)
-    # execute forum post query and send to csv
-    query = """SELECT  post_text FROM forum_posts WHERE is_spam != 1"""
-    execute_mysql_query_into_csv(query, file=forum_post_filename)
+    query = """SELECT * FROM quiz_submission_metadata WHERE item_id IN (SELECT id FROM quiz_metadata WHERE quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1) AND session_user_id IN (SELECT session_user_id FROM users WHERE access_group_id = 4);"""
+    execute_mysql_query_into_csv(query, file=outfile)
     # move both files to intended location -- this is a hack but it works without needing to chance mysql permissions
-    shutil.move(os.path.join(mysql_default_output_dir, forum_comment_filename),
-                forum_comment_fp)
-    add_course_and_session_columns(forum_comment_fp, course, session)
-    shutil.move(os.path.join(mysql_default_output_dir, forum_post_filename),
-                forum_post_fp)
+    shutil.move(os.path.join(mysql_default_output_dir, outfile), outfile_fp)
     add_course_and_session_columns(forum_post_fp, course, session)
     return
