@@ -74,6 +74,7 @@ def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
     course_session_dir = os.path.join("/input", course, session)
     mysql_default_output_dir = "/var/lib/mysql/{}/".format(
         DATABASE_NAME)  # this is the only location mysql can write to
+    outfile_temp_fp = os.path.join(mysql_default_output_dir, outfile)
     outfile_fp = os.path.join(course_session_dir, outfile)
     hash_mapping_sql_dump = \
         [x for x in os.listdir(course_session_dir) if "anonymized_general" in x and session in x][0] # contains users table
@@ -83,9 +84,9 @@ def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
     load_mysql_dump(os.path.join(course_session_dir, forum_sql_dump))
     load_mysql_dump(os.path.join(course_session_dir, hash_mapping_sql_dump))
     # execute forum comment query and send to csv
-    query = """SELECT * FROM quiz_submission_metadata WHERE item_id IN (SELECT id FROM quiz_metadata WHERE quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1) AND session_user_id IN (SELECT session_user_id FROM users WHERE access_group_id = 4);"""
-    execute_mysql_query_into_csv(query, file=outfile)
+    query = """SELECT * FROM quiz_submission_metadata WHERE item_id IN (SELECT id FROM quiz_metadata WHERE quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1) AND session_user_id IN (SELECT session_user_id FROM users WHERE access_group_id = 4)"""
+    execute_mysql_query_into_csv(query, file=outfile_temp_fp)
     # move both files to intended location -- this is a hack but it works without needing to chance mysql permissions
-    shutil.move(os.path.join(mysql_default_output_dir, outfile), outfile_fp)
-    add_course_and_session_columns(forum_post_fp, course, session)
+    shutil.move(outfile_temp_fp, outfile_fp)
+    add_course_and_session_columns(outfile_fp, course, session)
     return
