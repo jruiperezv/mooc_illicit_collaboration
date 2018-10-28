@@ -2,6 +2,7 @@ from feature_extraction.sql_utils import *
 from feature_extraction.reshape import create_submission_matrix_from_query_result
 import os
 import pandas as pd
+import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="execute feature extraction, training, or testing.")
