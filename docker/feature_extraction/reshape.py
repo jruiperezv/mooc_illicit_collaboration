@@ -14,10 +14,9 @@ def create_submission_matrix_from_query_result(fp):
     pivot_index_colnames=["session_user_id", "id"]
     df.columns = quiz_submission_meta_colnames
     df["submission_time"] = df["submission_time"].astype(int)
-    df.pivot_table(index=pivot_index_colnames, columns="item_id", values="submission_time").reset_index()
+    df = df.pivot_table(index=pivot_index_colnames, columns="item_id", values="submission_time").reset_index()
     # add prefix
-    df.rename(columns={x:"quiz_"+x for x in df.columns if x not in pivot_index_colnames})
-    df.to_csv()
+    df.rename(columns={x:"quiz_"+x for x in df.columns if x not in pivot_index_colnames}, inplace=True)
     return df
 
 
