@@ -46,28 +46,12 @@ def initialize_database(database_name=DATABASE_NAME):
     return
 
 
-def add_course_and_session_columns(csvfile, course, session):
-    """
-    Add course and session columns to csvfile.
-    :param csvfile: path to csv.
-    :param course: course name.
-    :param session: session.
-    :return:
-    """
-    df = pd.read_csv(csvfile, delimiter=',', quotechar='"', escapechar='\\', error_bad_lines=False, dtype=object)
-    df["course"] = course
-    df["session"] = session
-    df.to_csv(csvfile, index=False)
-    return
-
-
-def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
+def extract_coursera_sql_data(course, session, outfile):
     """
     Initialize the mySQL database, load files, and execute queries to deposit csv files of data into /input/course/session directory.
     :param course: course name.
-    :param session: session id.
-    :param forum_comment_filename: name of csv file to write forum comments data to.
-    :param forum_post_filename: name of csv file to write forum posts to.
+    :param session: session.
+    :param outfile: name of csv file to write to.
     :return:
     """
     # paths for reading and writing results
@@ -78,8 +62,6 @@ def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
     outfile_fp = os.path.join(course_session_dir, outfile)
     hash_mapping_sql_dump = \
         [x for x in os.listdir(course_session_dir) if "anonymized_general" in x and session in x][0] # contains users table
-    forum_sql_dump = \
-        [x for x in os.listdir(course_session_dir) if "anonymized_forum" in x and session in x][0]
     initialize_database()
     load_mysql_dump(os.path.join(course_session_dir, forum_sql_dump))
     load_mysql_dump(os.path.join(course_session_dir, hash_mapping_sql_dump))
@@ -88,5 +70,4 @@ def extract_coursera_sql_data(course, session, outfile="submission_matrix.csv"):
     execute_mysql_query_into_csv(query, file=outfile_temp_fp)
     # move both files to intended location -- this is a hack but it works without needing to chance mysql permissions
     shutil.move(outfile_temp_fp, outfile_fp)
-    add_course_and_session_columns(outfile_fp, course, session)
     return
