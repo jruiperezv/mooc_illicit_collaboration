@@ -63,7 +63,6 @@ def extract_coursera_sql_data(course, session, outfile):
     hash_mapping_sql_dump = \
         [x for x in os.listdir(course_session_dir) if "anonymized_general" in x and session in x][0] # contains users table
     initialize_database()
-    load_mysql_dump(os.path.join(course_session_dir, forum_sql_dump))
     load_mysql_dump(os.path.join(course_session_dir, hash_mapping_sql_dump))
     # execute forum comment query and send to csv
     query = """SELECT * FROM quiz_submission_metadata WHERE item_id IN (SELECT id FROM quiz_metadata WHERE quiz_type = 'quiz' AND deleted = 0 AND parent_id = -1) AND session_user_id IN (SELECT session_user_id FROM users WHERE access_group_id = 4)"""
