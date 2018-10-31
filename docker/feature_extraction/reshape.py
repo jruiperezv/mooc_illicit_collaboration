@@ -18,7 +18,7 @@ def create_submission_matrix_from_query_result(fp):
     df = df.loc[df.groupby(pivot_index)["submission_time"].idxmax()]
     df = df.pivot(index=pivot_index, columns="item_id", values="submission_time").reset_index()
     # add prefix
-    df.rename(columns={x:"quiz_"+x for x in df.columns if x != pivot_index}, inplace=True)
+    df.rename(columns={x:"item_id_"+x for x in df.columns if x != pivot_index}, inplace=True)
     return df
 
 
